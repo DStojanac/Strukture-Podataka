@@ -90,7 +90,7 @@ int readingFromFile(char *filename, student *st,int br_stud){
   for(i=0;i<br_stud;i++){
     fscanf(fp,"%s %s %f",st[i].ime,st[i].prezime, &st[i].bodovi);
   }
-
+  fclose(fp);
     return EXIT_SUCCESS;
 }
 
