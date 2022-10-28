@@ -225,16 +225,16 @@ int AppendList(position p,char *name,char *lastName, int birthYear){
 
 position FindByLastName(position p, char* lastName)
 {
-	while (p!= NULL)
+	while (p!= NULL && strcmp(p->lastName, lastName) !=0)
 	{
-		if (strcmp(p->lastName, lastName) == 0)
-			return p;
+		p=p->next;
+  }
 
-		else
-			p = p->next;
-	}
+	if(p==NULL){
+      printf("There is no that element in the list\n");
+   }
 
-  return EXIT_SUCCESS;
+  return p;
 }
 
 int DeleteByLastName(position p, position toDelete){
