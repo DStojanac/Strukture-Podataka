@@ -56,19 +56,19 @@ int main(void){
     printPoliList(resMult.next);
 
     printf("==================================\n");
-    if( Delete(&p1)==0){
+    if( Delete(p1.next)==0){
       printf("Successful memory cleaning p1!");
       printf("\n");
     }
-    if( Delete(&p2)==0){
+    if( Delete(p2.next)==0){
       printf("Successful memory cleaning p2!");
       printf("\n");
     }
-    if( Delete(&resAdd)==0){
+    if( Delete(resAdd.next)==0){
       printf("Successful memory cleaning resAdd!");
       printf("\n");
     }
-    if( Delete(&resMult)==0){
+    if( Delete(resMult.next)==0){
       printf("Successful memory cleaning resMult!");
       printf("\n");
     }
@@ -290,13 +290,14 @@ int polyMult(position multy, position p1, position p2)
 
 
 int Delete(position p){
-  position temp=p;
+  position head=p;
+  position temp;
 
-  while(temp->next!=NULL){
-    temp=p->next;
-    p->next=p->next->next;
-    free(temp);
+  while(head!=NULL){
+    temp=head->next;
+    free(head);
+    head=temp;
   }
-
+ 
   return EXIT_SUCCESS;
 }
