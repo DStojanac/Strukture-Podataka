@@ -1,3 +1,4 @@
+#pragma warning (disable: 4047)
 #define _CRT_SECURE_NO_WARNINGS
 #include<stdio.h>
 #include<stdlib.h>
@@ -16,20 +17,23 @@ typedef struct _stack {
 	float number;
 	position next;
 }stack;
-position top=NULL;
 
 
-int readFromFile(char* fileName,char *line);
+int readFromFile(position top,char* fileName,char *line);
 position createNew(float number);
-int push(float number);
-float pop();
-int printStack();
-int readFromBuffer(char *line);
-int operations(char operand);
-int Delete();
+int push(position top,float number);
+float pop(position top);
+int printStack(position top);
+int operations(position top,char operation);
+int Delete(position top);
+
+
 
 int main(void)
 {
+    stack head={.number=0,.next=NULL};
+    position top=&head;
+    
 
     char fileName[MAX_FILE_NAME] = { 0 };
     char line[MAX_LINE]={0};
@@ -37,19 +41,19 @@ int main(void)
 
     printf("Type in file name: ");
     scanf(" %s", fileName);
-
-    readFromFile(fileName,line);
-
     
+    readFromFile(top,fileName,line);
+    
+    // Provjera jel cita iz filea
     printf("Postfix from file: %s",line); 
 
-  
-    result=top->next->number;
+
+    result= top->next->number;
     printf("Result: %.2f\n",result);
 
     printf("==================================\n");
     
-    if(Delete()==0){
+    if(Delete(top)==0){
       printf("Successful memory cleaning p1!");
       printf("\n");
     }
@@ -57,9 +61,14 @@ int main(void)
     return EXIT_SUCCESS;
 }
 
-int readFromFile(char* fileName,char *line)
-{
-    char buffer[MAX_LINE] = { 0 };
+
+
+int readFromFile(position top,char* fileName,char *line){
+  float number=0;
+  char operation=0;
+  int n=0;
+  char buffer[MAX_LINE] = { 0 };
+  char *ptr=buffer;
     FILE* fp = NULL;
     fp = fopen(fileName, "r");
 
@@ -70,12 +79,24 @@ int readFromFile(char* fileName,char *line)
     }
 
     while(!feof(fp)){
-        fgets(buffer,MAX_LINE,fp);
-        readFromBuffer(buffer);
-    }
+      fgets(buffer,MAX_LINE,fp);
+      strcpy(line,buffer);
+      while(strlen(ptr)>0){
 
-    strcpy(line,buffer);
-    
+        if(sscanf(ptr, " %f %n", &number, &n)==1){
+          push(top,number);
+          ptr += n;
+        }
+        else if(sscanf(ptr, " %c %n", &operation, &n)==1){
+          operations(top,operation);
+          ptr += n;
+        }
+        else{
+          printf("Wrong postfix! ");
+         }
+
+        }
+    }
     fclose(fp);
 
     return EXIT_SUCCESS;
@@ -93,11 +114,12 @@ position createNew(float number)
     }
 
     new->number = number;
-    
+    new->next=NULL;
+
     return new;
 }
 
-int push(float number)
+int push(position top,float number)
 {
     position new = NULL;
     new = createNew(number);
@@ -108,13 +130,32 @@ int push(float number)
     }
     
     
-    new->next = top;
-    top=new;
+    new->next = top->next;
+    top->next=new;
     
     return EXIT_SUCCESS;
 }
 
-int printStack(){
+float pop(position top){
+  position temp=top->next;
+  float number=0.0;
+
+  if (top == NULL) {
+        printf("Stack is empty!");
+        return MEMORY_NOT_ALLOCATED_CORRECT;
+  }
+  
+  number=temp->number; 
+
+  top->next=temp->next;
+  free(temp);
+
+  
+  return number;
+}
+
+
+int printStack(position top){
   position temp=top;
 
   if(temp==NULL){
@@ -131,76 +172,30 @@ int printStack(){
   return EXIT_SUCCESS;
 }
 
-float pop(){
-  position temp;
-  float number=0;
-  if (top == NULL) {
-      printf("Stack is empty!");
-      return MEMORY_NOT_ALLOCATED_CORRECT;
-  }
-    
-    number=top->number;  
-    temp=top;
-    top=top->next;
-    free(temp);
 
-  return number;
-}
 
-int readFromBuffer(char *line){
-
-  float number=0;
-  char operand=0;
-  int n=0;
-  int rez=0;
- 
-
-  while (strlen(line) > 0)
-  {
-      rez = sscanf(line, " %f %n", &number, &n);
-
-      if (rez == 1) 
-      {
-          push(number);
-          line += n;
-
-      }
-      else 
-      {
-          sscanf(line, " %c %n", &operand, &n);
-          operations(operand);
-          line += n;
-      }
-  }
-
-    
-    return EXIT_SUCCESS;
-  }
-
- 
-
-int operations(char operand){
+int operations(position top,char operation){
   float number1=0;
   float number2=0;
   float rez=0;
 
-  number1=pop();
-  number2=pop();
+  number1=pop(top);
+  number2=pop(top);
 
-  switch(operand){
+  switch(operation){
     case '+':
       rez=number2+number1;
-      push(rez);
+      push(top,rez);
       break;
     case '-':
       rez=number2-number1;
-      push(rez);
+      push(top,rez);
       break;
     case '*':
       rez=number1*number2;
-      push(rez);
+      push(top,rez);
       break;
-    case '/':
+    case '/':    
       if (number1 == 0)
         {
             printf("Dividing by zero isn't possible!\n");
@@ -209,11 +204,12 @@ int operations(char operand){
         else
         {
             rez = number2 / number1;
-            push(rez);
+            push(top,rez);
         }
         break;
     default:
-		printf("Wrong postfix expression!");
+		  printf("Wrong postfix expression!");
+      break;
 		return POSTFIX_ERROR;
   }
 
@@ -221,7 +217,7 @@ int operations(char operand){
   return EXIT_SUCCESS;
 }
 
-int Delete(){
+int Delete(position top){
   position head=top->next;
   position temp;
 
